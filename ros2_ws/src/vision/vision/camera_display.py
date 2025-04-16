@@ -3,71 +3,61 @@ from rclpy.node import Node
 from sensor_msgs.msg import Image
 import cv2
 from cv_bridge import CvBridge
-import numpy as np
 
-class CameraSubscriber(Node):
+class CameraDisplay(Node):
     """
     A ROS2 Node that subscribes to an Image topic and displays the frames 
     using OpenCV. It also applies a vertical flip to each frame before rendering.
     """
 
     def __init__(self):
-        super().__init__('camera_subscriber')
+        super().__init__('camera_display')
         
-        # Create a subscription to the '/camera/image' topic of type sensor_msgs.msg.Image.
-        # The callback function 'listener_callback' is invoked each time a new message arrives.
+        # Create a subscription to the '/camera/image' topic of type sensor_msgs.msg.Image
+        # The callback function 'listener_callback' is invoked each time a new message arrives
         self.subscription = self.create_subscription(
             Image,
             '/camera/image',
-            self.listener_callback,
-            10
+            self.image_callback,
+            qos.qos_profile_sensor_data
         )
-        # Avoids an unused variable warning.
-        self.subscription
-        
-        # Initialize the CvBridge, which handles conversions between ROS Image messages and OpenCV images.
+
+        # Initialize the CvBridge, which handles conversions between ROS Image messages and OpenCV images
         self.bridge = CvBridge()
 
-    def listener_callback(self, msg):
+    def image_callback(self, msg):
         """
         Callback function that triggers on receiving a new Image message.
         Converts the ROS Image into an OpenCV image, flips it vertically, 
         and then displays it in a window.
         """
         try:
-            # Convert the ROS Image message to an OpenCV image in RGB format.
+            # Convert the ROS Image message to an OpenCV image in RGB format
             cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='rgb8')
         except Exception as e:
             self.get_logger().error(f"Error converting image: {str(e)}")
             return
 
-        # Convert from RGB to BGR, as required by OpenCV.
+        # Convert from RGB to BGR, as required by OpenCV
         cv_image = cv2.cvtColor(cv_image, cv2.COLOR_RGB2BGR)
         
-        # Flip the image vertically. 
-        #   Flip code 0 indicates a vertical flip.
-        #   Flip code 1 indicates a horizontal flip.
-        #   Flip code -1 indicates a flip in both axes.
+        # Flip the image vertically
         cv_image = cv2.flip(cv_image, 0)
         
-        # Display the image in a window titled "Camera Image".
+        # Display the image in a window titled "Camera Image"
         cv2.imshow("Camera Image", cv_image)
 
-        # Wait 1 millisecond to allow the window to refresh.
+        # Wait 1 millisecond to allow the window to refresh
         cv2.waitKey(1)
 
 def main(args=None):
-    """
-    Main entry point of the script. Initializes the ROS client library,
-    creates the node, and keeps spinning until the user interrupts (e.g., Ctrl-C).
-    """
     rclpy.init(args=args)
-    node = CameraSubscriber()
+    node = CameraDisplay()
 
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:
-        pass
+        node.get_logger().info("Keyboard interrupt received. Shutting down.")
     finally:
         node.destroy_node()
         rclpy.shutdown()
