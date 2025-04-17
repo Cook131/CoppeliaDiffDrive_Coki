@@ -1,38 +1,36 @@
-import math
-
-# ============================================================================
-# This script is attached to a sphere in CoppeliaSim.
-# It causes the sphere to move back and forth along the Y-axis in a sine wave
-# pattern, simulating oscillatory motion. The motion is defined by adjustable
-# amplitude and frequency values.
-# ============================================================================
-
 def sysCall_init():
-    sim = require('sim')
-    
-    # Get the handle for the sphere
-    self.sphereHandle = sim.getObject('/Sphere')
-    
-    # Record the current simulation time
-    self.startTime = sim.getSimulationTime()
-    
-    # Customize the amplitude/frequency of the sine movement
-    self.amplitude = 0.5   # Movement range along Y-axis
-    self.frequency = 0.2   # Oscillation frequency in Hz
+    global sim, math, sphere, start_time, initial_position
 
+    sim = require('sim')
+    math = require('math')  # necesario para usar sin(), pi, etc.
+
+    # Obtener el handle del objeto llamado exactamente "Sphere"
+    sphere = sim.getObject('/Sphere')
+
+    # Guardar la posición inicial de la esfera
+    initial_position = sim.getObjectPosition(sphere, -1)
+
+    # Guardar el tiempo de inicio
+    start_time = sim.getSimulationTime()
+    
 def sysCall_actuation():
-    # Calculate elapsed time
-    currentTime = sim.getSimulationTime()
-    elapsed = currentTime - self.startTime
+    global sim, math, sphere, start_time, initial_position
+
+    # Calcular tiempo transcurrido
+    t = sim.getSimulationTime() - start_time
+
+    # Parámetros del movimiento
+    amplitude = 0.2      # en metros
+    frequency = 0.5      # en Hz
+
+    # Calcular nueva posición X usando una onda seno
+    new_x = initial_position[0] + amplitude * math.sin(2 * math.pi * frequency * t)
+
+    # Aplicar la nueva posición (sólo cambia X)
+    sim.setObjectPosition(sphere, -1, [new_x, initial_position[1], initial_position[2]])
     
-    # Sine-based displacement    
-    displacement = self.amplitude * math.sin(2 * math.pi * self.frequency * elapsed)
-    
-    # Get current position in the world frame (-1)
-    position = sim.getObjectPosition(self.sphereHandle, -1)
-    
-    # Update the Y component
-    position[1] = displacement
-    
-    # Apply the new position
-    sim.setObjectPosition(self.sphereHandle, -1, position)
+def sysCall_sensing():
+    pass
+
+def sysCall_cleanup():
+    pass
