@@ -15,7 +15,7 @@ setup(
     zip_safe=True,
     maintainer='Cook131',
     maintainer_email='cloudkid075@gmail.com',
-    description='TODO: Holis Ceron',
+    description='TODO: Vision OpenCV style',
     license='TODO: Juro q tengo licencia ong',
     tests_require=['pytest'],
     entry_points={

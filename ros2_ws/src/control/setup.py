@@ -15,7 +15,7 @@ setup(
     zip_safe=True,
     maintainer='Cook131',
     maintainer_email='cloudkid075@gmail.com',
-    description='TODO: Ya hace hambre',
+    description='TODO: Esto es un PID bonito',
     license='TODO: licencia',
     tests_require=['pytest'],
     entry_points={
