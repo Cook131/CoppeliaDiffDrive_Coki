@@ -1,52 +1,46 @@
 sim = require 'sim'
 simROS2 = require('simROS2')
 
--- ============================================================================
--- This script is attached to a vision sensor mounted on a mobile robot
--- in CoppeliaSim. It captures RGB images from the sensor and publishes them
--- as ROS2 messages (sensor_msgs/Image) on the topic /camera/image.
--- ============================================================================
-
--- Get the camera handle
+-- Obtener el handle del sensor de visión
 visionSensor = sim.getObject('/visionSensor')
 
--- Create a publisher for the image topic
+-- Publicador para el tópico de la cámara
 imagePub = nil
 
 function sysCall_init()
-    imagePub = simROS2.createPublisher('/camera/image', 'sensor_msgs/msg/Image')
+    -- Crear publicador en /camera/image
+    imagePub = simROS2.createPublisher('/PioneerP3DX/visionSensor', 'sensor_msgs/msg/Image')
 end
 
 function sysCall_actuation()
-    -- Get the sensor resolution (width, height)
+    -- Obtener resolución del sensor (ancho, alto)
     local resolution = sim.getVisionSensorResolution(visionSensor)
     local width = resolution[1]
     local height = resolution[2]
-    
-    -- Capture the image, returned as an array of floats
+
+    -- Capturar imagen (valores en [0,1])
     local image = sim.getVisionSensorImage(visionSensor)
-    
-    -- Create the sensor_msgs/Image message
+
+    -- Armar mensaje sensor_msgs/Image
     local msg = {}
-    msg.header = {}                 -- If needed, set the header (e.g., timestamp, frame_id)
+    msg.header = {}             -- Timestamp o frame_id
     msg.height = height
     msg.width = width
-    msg.encoding = "rgb8"           -- Assuming an 8-bit RGB image
+    msg.encoding = 'rgb8'       -- Formato RGB 8 bits
     msg.is_bigendian = 1
-    msg.step = width * 3            -- Number of bytes per line: width * 3 channels
+    msg.step = width * 3        -- Bytes por fila: ancho * 3 canales
     msg.data = {}
-    
-    -- Convert the image by multiplying each value by 255 
-    -- (CoppeliaSim image values range from [0,1])
+
+    -- Convertir cada valor de [0,1] a [0,255]
     for i = 1, #image do
         msg.data[i] = math.floor(image[i] * 255)
     end
-    
-    -- Publish the message
+
+    -- Publicar la imagen en ROS2
     simROS2.publish(imagePub, msg)
 end
 
 function sysCall_cleanup()
-    -- Clean up publisher
+    -- Cerrar el publicador al terminar
     simROS2.shutdownPublisher(imagePub)
 end
